@@ -1,8 +1,9 @@
 use std::{collections::{HashMap, hash_map}, fs::File};
-use log::error;
+use log::{error, info};
 
 use clap::Parser;
 use serde::Deserialize;
+use resolve_path::PathResolveExt;
 
 use crate::{actions::Action, droidpad::{self, Direction}, exec};
 
@@ -13,7 +14,7 @@ pub struct Arguments {
 	#[arg(short, long, default_value = "0.0.0.0:9123")]
 	pub address: String,
 	/// YAML configuration file to define the action commands.
-	#[arg(short, long)]
+	#[arg(short, long, default_value = "~/.config/droidpad-companion.yaml")]
 	pub config: String,
 }
 
@@ -22,6 +23,9 @@ pub struct ActionsConfig(HashMap<String, Action>);
 
 impl ActionsConfig {
 	pub fn from_file(path: &String) -> Result<Self, Box<dyn std::error::Error>> {
+		let path = path.try_resolve()
+			.expect("Failed when resolving the path for configuration file");
+		info!("Reading the configuration from {}", path.display());
 		let file = File::open(path)?;
 		let config: Self = serde_yaml::from_reader(file)?;
 		Ok(config)

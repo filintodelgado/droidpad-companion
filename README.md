@@ -6,8 +6,13 @@ commands based on YAML configuration.
 ## Usage
 
 ```sh
-droidpad-companion --config <yaml configuration file> --address <host:port>
+droidpad-companion [--config <yaml configuration file>] [--address <host:port>]
 ```
+
+### Defaults
+
+- `--config`: `~/.config/droidpad-companion.yaml`
+- `--address`: `0.0.0.0:9123`
 
 ## Configuration
 

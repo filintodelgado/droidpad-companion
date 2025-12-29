@@ -16,6 +16,7 @@ fn main() {
 	let _ = env_logger::init_from_env(env);
 
 	let arguments = Arguments::parse();
+	
 	let config = ActionsConfig::from_file(&arguments.config)
 		.expect("Failed to read YAML configuration file");
 
