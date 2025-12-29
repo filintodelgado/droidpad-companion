@@ -57,3 +57,8 @@ move:
   left: "wtype -k left"
   right: "wtype -k left"
 ```
+
+## Limitations
+
+- Only supports WebSocket;
+- Can only have one connection at the time.
