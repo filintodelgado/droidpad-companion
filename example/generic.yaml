@@ -1,0 +1,25 @@
+# Control a generic media device by emulating keystrokes.
+
+play-pause:
+  type: "button"
+  command: "wtype -k space" # executed when button is clicked
+volume:
+  type: "slider"
+  startup: "pamixer --get-volume" # update UI with the value from this command at startup
+  command: "pactl set-sink-volume @DEFAULT_SINK@ {}%" # {} is replaced with the value from the server.
+move:
+  type: "dpad"
+  up: "wtype -k up"
+  down: "wtype -k down"
+  left: "wtype -k left"
+  right: "wtype -k left"
+mute:
+  type: "switch"
+  startup: "pamixer --get-mute" # expects the stdout to output either true or false
+  command: "pamixer --toggle-mute"
+previous:
+  type: "button"
+  command: "wtype -k p"
+next:
+  type: "button"
+  command: "wtype -k n"
