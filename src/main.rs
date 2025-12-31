@@ -1,27 +1,31 @@
-mod droidpad;
-mod config;
 mod actions;
+mod config;
+mod droidpad;
 mod exec;
 
-use std::{error::Error, net::{TcpListener, TcpStream}};
+use std::{
+	error::Error,
+	net::{TcpListener, TcpStream},
+};
 
 use clap::Parser;
 use log::{debug, error, info, warn};
 
-use crate::{config::{ActionsConfig, Arguments}, droidpad::ButtonState};
+use crate::{
+	config::{ActionsConfig, Arguments},
+	droidpad::ButtonState,
+};
 
 fn main() {
-	let env = env_logger::Env::default()
-		.filter_or("LOG_LEVEL", "info");
+	let env = env_logger::Env::default().filter_or("LOG_LEVEL", "info");
 	let _ = env_logger::init_from_env(env);
 
 	let arguments = Arguments::parse();
-	
+
 	let config = ActionsConfig::from_file(&arguments.config)
 		.expect("Failed to read YAML configuration file");
 
-	let socket = TcpListener::bind(&arguments.address)
-		.expect("Failed to bind to address");
+	let socket = TcpListener::bind(&arguments.address).expect("Failed to bind to address");
 
 	info!("Listening on ws://{}/", &arguments.address);
 
@@ -42,7 +46,6 @@ fn main() {
 	}
 }
 
-
 fn handle_connection(stream: TcpStream, config: &ActionsConfig) -> Result<(), Box<dyn Error>> {
 	let mut ws = tungstenite::accept(stream)?;
 
@@ -62,7 +65,7 @@ fn handle_connection(stream: TcpStream, config: &ActionsConfig) -> Result<(), Bo
 		};
 
 		if msg.is_empty() {
-			continue
+			continue;
 		}
 
 		let droidpad_action: droidpad::Action = match serde_json::from_str(msg.as_str()) {
@@ -86,8 +89,8 @@ fn handle_connection(stream: TcpStream, config: &ActionsConfig) -> Result<(), Bo
 				if let Err(e) = exec::run_command(&command) {
 					error!("Failed to run command for {}: {e}", droidpad_action.id())
 				}
-			},
-			None => warn!(r#"No command for "{}""#, droidpad_action.id())
+			}
+			None => warn!(r#"No command for "{}""#, droidpad_action.id()),
 		}
 	}
 }

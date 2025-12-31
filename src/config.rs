@@ -1,11 +1,18 @@
-use std::{collections::{HashMap, hash_map}, fs::File};
 use log::{error, info};
+use std::{
+	collections::{HashMap, hash_map},
+	fs::File,
+};
 
 use clap::Parser;
-use serde::Deserialize;
 use resolve_path::PathResolveExt;
+use serde::Deserialize;
 
-use crate::{actions::Action, droidpad::{self, Direction}, exec};
+use crate::{
+	actions::Action,
+	droidpad::{self, Direction},
+	exec,
+};
 
 /// Companion tool to run commands controlled by Droidpad.
 #[derive(Parser)]
@@ -23,7 +30,8 @@ pub struct ActionsConfig(HashMap<String, Action>);
 
 impl ActionsConfig {
 	pub fn from_file(path: &String) -> Result<Self, Box<dyn std::error::Error>> {
-		let path = path.try_resolve()
+		let path = path
+			.try_resolve()
 			.expect("Failed when resolving the path for configuration file");
 		info!("Reading the configuration from {}", path.display());
 		let file = File::open(path)?;
@@ -38,14 +46,17 @@ impl ActionsConfig {
 	pub fn actions(&self) -> &HashMap<String, Action> {
 		&self.0
 	}
-	fn config_action(&self, droidpad_action: &droidpad::Action) -> Option<&Action>{
+	fn config_action(&self, droidpad_action: &droidpad::Action) -> Option<&Action> {
 		if let Some(action) = self.actions().get(droidpad_action.id()) {
 			if !action.matches(droidpad_action) {
-				error!("The type of the action for {} defined in the configuration file and the one send by droidpad differ: {action:?}, {droidpad_action:?}", droidpad_action.id());
-				return None
+				error!(
+					"The type of the action for {} defined in the configuration file and the one send by droidpad differ: {action:?}, {droidpad_action:?}",
+					droidpad_action.id()
+				);
+				return None;
 			}
 
-			return Some(action)
+			return Some(action);
 		}
 
 		None
@@ -55,18 +66,23 @@ impl ActionsConfig {
 		if let Some(action) = self.config_action(droidpad_action) {
 			return match action {
 				Action::Button { command } => Some(command),
-				Action::Dpad { up, down, left, right } => {
+				Action::Dpad {
+					up,
+					down,
+					left,
+					right,
+				} => {
 					let direction = droidpad_action.direction()?;
 					match direction {
 						Direction::Up => up.as_ref(),
 						Direction::Left => left.as_ref(),
 						Direction::Right => right.as_ref(),
-						Direction::Down => down.as_ref()
+						Direction::Down => down.as_ref(),
 					}
-				},
+				}
 				Action::Slider { command, .. } => Some(command),
-				Action::Switch { command, .. } => Some(command)
-			}
+				Action::Switch { command, .. } => Some(command),
+			};
 		}
 
 		None
@@ -76,18 +92,22 @@ impl ActionsConfig {
 		let command = self.raw_command_for(droidpad_action);
 
 		match droidpad_action.value() {
-			Some(value) => command.map(|s| s.replace(COMMAND_REPLACE_PATTERN, value.to_string().as_str())),
-			None => command.map(|s| s.into())
+			Some(value) => {
+				command.map(|s| s.replace(COMMAND_REPLACE_PATTERN, value.to_string().as_str()))
+			}
+			None => command.map(|s| s.into()),
 		}
 	}
 
 	pub fn startup_actions(&self) -> StartupActions<'_> {
-		StartupActions { iterator: self.0.iter() }
+		StartupActions {
+			iterator: self.0.iter(),
+		}
 	}
 }
 
 pub struct StartupActions<'a> {
-	iterator: hash_map::Iter<'a, String, Action>
+	iterator: hash_map::Iter<'a, String, Action>,
 }
 
 impl<'a> Iterator for StartupActions<'a> {
@@ -97,7 +117,7 @@ impl<'a> Iterator for StartupActions<'a> {
 		loop {
 			let (id, action) = match self.iterator.next() {
 				Some(v) => v,
-				None => return None
+				None => return None,
 			};
 
 			if let Some(startup_command) = action.startup_command() {
