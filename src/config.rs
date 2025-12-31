@@ -40,12 +40,18 @@ impl ActionsConfig {
 	}
 }
 
+/// Pattern to replace in commands with the actual value.
+///
+/// All occurrences are replaced and the pattern cannot be scaped.
 const COMMAND_REPLACE_PATTERN: &str = "{}";
 
 impl ActionsConfig {
 	pub fn actions(&self) -> &HashMap<String, Action> {
 		&self.0
 	}
+
+	/// The actions from the YAML configuration the action that corresponds to the given Droidpad
+	/// action if the action type corresponds.
 	fn config_action(&self, droidpad_action: &droidpad::Action) -> Option<&Action> {
 		if let Some(action) = self.actions().get(droidpad_action.id()) {
 			if !action.matches(droidpad_action) {
@@ -88,6 +94,7 @@ impl ActionsConfig {
 		None
 	}
 
+	/// The shell command for the given droidpad action.
 	pub fn command_for(&self, droidpad_action: &droidpad::Action) -> Option<String> {
 		let command = self.raw_command_for(droidpad_action);
 
@@ -99,6 +106,9 @@ impl ActionsConfig {
 		}
 	}
 
+	/// Iterator for all the startup actions in the configuration file.
+	///
+	/// For every action the command is executed and the result Droidpad action is given.
 	pub fn startup_actions(&self) -> StartupActions<'_> {
 		StartupActions {
 			iterator: self.0.iter(),
@@ -124,7 +134,7 @@ impl<'a> Iterator for StartupActions<'a> {
 				let output = match exec::run_command(startup_command) {
 					Ok(o) => o,
 					Err(e) => {
-						error!("failed to execute startup command for {id}: {e}");
+						error!("Failed to execute startup command for {id}: {e}");
 						continue;
 					}
 				};
