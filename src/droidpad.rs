@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -55,5 +57,20 @@ impl Action {
 			Self::Button { state, .. } => Some(state),
 			_ => None,
 		}
+	}
+}
+
+impl Display for Action {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let deserialized = serde_json::to_string(self).unwrap();
+		write!(f, "{deserialized}")
+	}
+}
+
+impl TryFrom<&'_ str> for Action {
+	type Error = serde_json::Error;
+
+	fn try_from(value: &'_ str) -> Result<Self, Self::Error> {
+		serde_json::from_str(value)
 	}
 }

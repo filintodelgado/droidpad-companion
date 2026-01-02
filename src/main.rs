@@ -41,6 +41,15 @@ fn main() {
 		info!("Connected to {}", stream.peer_addr().unwrap());
 
 		if let Err(e) = handle_connection(stream, &config) {
+			if let Some(err) = e.downcast_ref::<tungstenite::Error>() {
+				match err {
+					tungstenite::Error::AlreadyClosed | tungstenite::Error::ConnectionClosed => {
+						info!("Disconnected");
+						continue;
+					}
+					_ => {}
+				}
+			}
 			error!("{e}")
 		}
 	}
@@ -50,8 +59,9 @@ fn handle_connection(stream: TcpStream, config: &ActionsConfig) -> Result<(), Bo
 	let mut ws = tungstenite::accept(stream)?;
 
 	for startup_action in config.startup_actions() {
-		let update_json_payload = serde_json::to_string(&startup_action)?.into();
-		ws.send(tungstenite::Message::Text(update_json_payload))?;
+		ws.send(tungstenite::Message::Text(
+			startup_action.to_string().into(),
+		))?;
 	}
 
 	loop {
@@ -68,7 +78,7 @@ fn handle_connection(stream: TcpStream, config: &ActionsConfig) -> Result<(), Bo
 			continue;
 		}
 
-		let droidpad_action: droidpad::Action = match serde_json::from_str(msg.as_str()) {
+		let droidpad_action: droidpad::Action = match msg.as_str().try_into() {
 			Ok(a) => a,
 			Err(e) => {
 				warn!("Received an invalid droidpad action: {e}");
