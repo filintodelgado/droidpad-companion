@@ -2,6 +2,7 @@ use log::{error, info};
 use std::{
 	collections::{HashMap, hash_map},
 	fs::File,
+	process::exit,
 };
 
 use clap::Parser;
@@ -30,9 +31,14 @@ pub struct ActionsConfig(HashMap<String, Action>);
 
 impl ActionsConfig {
 	pub fn from_file(path: &String) -> Result<Self, Box<dyn std::error::Error>> {
-		let path = path
-			.try_resolve()
-			.expect("Failed when resolving the path for configuration file");
+		let path = match path.try_resolve() {
+			Ok(v) => v,
+			Err(e) => {
+				error!("Couldn't resolve the path \"{path}\": {e}");
+				exit(1)
+			}
+		};
+
 		info!("Reading the configuration from {}", path.display());
 		let file = File::open(path)?;
 		let config: Self = serde_yaml::from_reader(file)?;

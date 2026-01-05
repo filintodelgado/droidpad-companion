@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 
@@ -67,10 +67,10 @@ impl Display for Action {
 	}
 }
 
-impl TryFrom<&'_ str> for Action {
-	type Error = serde_json::Error;
+impl FromStr for Action {
+	type Err = serde_json::Error;
 
-	fn try_from(value: &'_ str) -> Result<Self, Self::Error> {
+	fn from_str(value: &str) -> Result<Self, Self::Err> {
 		serde_json::from_str(value)
 	}
 }

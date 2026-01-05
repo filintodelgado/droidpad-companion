@@ -5,7 +5,8 @@ mod exec;
 
 use std::{
 	error::Error,
-	net::{TcpListener, TcpStream},
+	net::{SocketAddr, TcpListener, TcpStream},
+	process::exit,
 };
 
 use clap::Parser;
@@ -21,11 +22,32 @@ fn main() {
 	let _ = env_logger::init_from_env(env);
 
 	let arguments = Arguments::parse();
+	let address: SocketAddr = match arguments.address.parse() {
+		Ok(v) => v,
+		Err(_) => {
+			error!("IP address \"{}\" is invalid", arguments.address);
+			exit(1);
+		}
+	};
 
-	let config = ActionsConfig::from_file(&arguments.config)
-		.expect("Failed to read YAML configuration file");
+	let socket = match TcpListener::bind(address) {
+		Ok(v) => v,
+		Err(e) => {
+			error!("Failed to bind to \"{}\" ip address: {}", address, e);
+			exit(1);
+		}
+	};
 
-	let socket = TcpListener::bind(&arguments.address).expect("Failed to bind to address");
+	let config = match ActionsConfig::from_file(&arguments.config) {
+		Ok(v) => v,
+		Err(e) => {
+			error!(
+				"Failed to read configuration from \"{}\": {}",
+				arguments.config, e
+			);
+			exit(1)
+		}
+	};
 
 	info!("Listening on ws://{}/", &arguments.address);
 
@@ -59,9 +81,8 @@ fn handle_connection(stream: TcpStream, config: &ActionsConfig) -> Result<(), Bo
 	let mut ws = tungstenite::accept(stream)?;
 
 	for startup_action in config.startup_actions() {
-		ws.send(tungstenite::Message::Text(
-			startup_action.to_string().into(),
-		))?;
+		let payload = startup_action.to_string().into();
+		ws.send(tungstenite::Message::Text(payload))?;
 	}
 
 	loop {
@@ -78,7 +99,7 @@ fn handle_connection(stream: TcpStream, config: &ActionsConfig) -> Result<(), Bo
 			continue;
 		}
 
-		let droidpad_action: droidpad::Action = match msg.as_str().try_into() {
+		let droidpad_action: droidpad::Action = match msg.parse() {
 			Ok(a) => a,
 			Err(e) => {
 				warn!("Received an invalid droidpad action: {e}");
