@@ -1,13 +1,10 @@
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 
 use crate::droidpad;
 
 #[derive(Deserialize, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum Action {
-	Button {
-		command: String,
-	},
 	Slider {
 		startup: Option<String>,
 		command: String,
@@ -22,6 +19,15 @@ pub enum Action {
 		startup: Option<String>,
 		command: String,
 	},
+	#[serde(deserialize_with = "deserialize_from_string", untagged)]
+	Button { command: String },
+}
+
+fn deserialize_from_string<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+	D: Deserializer<'de>,
+{
+	String::deserialize(deserializer)
 }
 
 impl Action {

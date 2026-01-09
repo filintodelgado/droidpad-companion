@@ -3,6 +3,14 @@
 A companion app for [DroidPad](https://github.com/UmerCodez/DroidPad) for Linux that can run
 commands based on YAML configuration.
 
+## Install
+
+Install this package with cargo:
+
+```sh
+cargo install --path .
+```
+
 ## Usage
 
 ```sh
@@ -16,13 +24,19 @@ droidpad-companion [--config <yaml configuration file>] [--address <host:port>]
 
 ## Configuration
 
-Define int the YAML file your actions, the type and the command to be executed when the action
-is triggered:
+Define in the YAML file your actions the command to be executed when the action is triggered:
 
 ```yaml
-play-pause:
-    type: "button"
-    command: "playerctl play-pause"
+play-pause: "playerctl play-pause"
+```
+
+For buttons you can just specify the command to be executed on click, but for other types you
+also need to specify the type:
+
+```yaml
+mute:
+  type: "switch"
+  command: "pamixer --toggle-mute"
 ```
 
 > Examples for configuration files can be found in [`examples/`](/examples/).
@@ -31,7 +45,6 @@ play-pause:
 
 The types should always be indicated and in lowercase:
 
-- `button`
 - `slider`
 - `dpad`
 - `switch`

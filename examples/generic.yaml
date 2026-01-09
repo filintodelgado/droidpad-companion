@@ -1,8 +1,6 @@
 # Control a generic media device by emulating keystrokes.
 
-play-pause:
-  type: "button"
-  command: "wtype -k space" # executed when button is clicked
+play-pause: "wtype -k space" # executed when button is clicked
 volume:
   type: "slider"
   startup: "pamixer --get-volume" # update UI with the value from this command at startup
@@ -17,9 +15,5 @@ mute:
   type: "switch"
   startup: "pamixer --get-mute" # expects the stdout to output either true or false
   command: "pamixer --toggle-mute"
-previous:
-  type: "button"
-  command: "wtype -k p"
-next:
-  type: "button"
-  command: "wtype -k n"
+previous: "wtype -k p"
+next: "wtype -k n"

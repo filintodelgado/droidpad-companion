@@ -1,18 +1,12 @@
 # Media controller with playerctl and pamixer.
 
-play-pause:
-  type: "button"
-  command: "playerctl play-pause" # executed when button is clicked
+play-pause: "playerctl play-pause" # executed when button is clicked
+next: "playerctl next"
+previous: "playerctl previous"
 volume:
   type: "slider"
   startup: "pamixer --get-volume" # update UI with the value from this command at startup
   command: "pactl set-sink-volume @DEFAULT_SINK@ {}%" # {} is replaced with the value from the server.
-next:
-  type: "button"
-  command: "playerctl next"
-previous:
-  type: "button"
-  command: "playerctl previous"
 mute:
   type: "switch"
   startup: "pamixer --get-mute" # expects the stdout to output either true or false
